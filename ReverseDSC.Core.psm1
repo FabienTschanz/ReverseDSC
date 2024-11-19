@@ -713,8 +713,8 @@ we should not have commas in between items it contains.
                 $endPosition = $DSCBlock.IndexOf("`"", $startPosition + 1)
                  <#
                     When the parameter is a CIM array, it may contain parameter with double quotes.
-                    We need to ensure that endPosition does not correspond to such instances by
-                    checking if the second character before " is an equal sign =.
+                    We need to ensure that endPosition does not correspond to such instances
+                    by checking if the second character before " is an equal sign (=).
                     Additionally, there might be other values in the DSC block, e.g. from xml,
                     which contain other properties like <?xml version="1.0"?>, where we do
                     not want to remove the quotes as well.
@@ -750,12 +750,12 @@ we should not have commas in between items it contains.
                 }
             }
         }
-        $previousStartPosition = $startPosition - 1
+        $previousStartPosition = $startPosition
         $startPosition = $DSCBlock.IndexOf("`"", $startPosition)
         <#
             When the parameter is a CIM array, it may contain parameters with double quotes.
-            We need to ensure that startPosition does not correspond to such instances by
-            checking if the second character before " is an equal sign =.
+            We need to ensure that startPosition does not correspond to such instances
+            by checking if the second character before " is an equal sign (=).
             Additionally, there might be other values in the DSC block, e.g. from xml,
             which contain other properties like <?xml version="1.0"?>, where we do
             not want to remove the quotes as well.
@@ -778,9 +778,15 @@ we should not have commas in between items it contains.
 
             # Replace potential escaped double quotes with a single double quote
             $startToEnd = $DSCBlock.Substring($previousStartPosition, $endPosition - $previousStartPosition)
+            $startToEndLength = $startToEnd.Length
             $startToEnd = $startToEnd.Replace("```"", "`"")
-            $DSCBlock = $DSCBlock.Remove($previousStartPosition, $endPosition - $previousStartPosition)
-            $DSCBlock = $DSCBlock.Insert($previousStartPosition, $startToEnd)
+            $characterDifferenceCount = $startToEndLength - $startToEnd.Length
+            if ($characterDifferenceCount -gt 0)
+            {
+                $DSCBlock = $DSCBlock.Remove($previousStartPosition, $endPosition - $previousStartPosition)
+                $DSCBlock = $DSCBlock.Insert($previousStartPosition, $startToEnd)
+                $startPosition = $startPosition - $characterDifferenceCount
+            }
         }
     }
 
